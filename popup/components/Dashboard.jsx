@@ -14,6 +14,32 @@ const Dashboard = () => {
 
   const [activeTask, setActiveTask] = useState(null);
   const [timerSettings, setTimerSettings] = useState(null);
+  const [userName, setUserName] = useState('');
+  const [timeOfDay, setTimeOfDay] = useState('');
+
+  // Determine time of day for greeting
+  useEffect(() => {
+    const now = new Date();
+    const hour = now.getHours();
+
+    let greeting = '';
+    if (hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour < 18) {
+      greeting = 'Good afternoon';
+    } else {
+      greeting = 'Good evening';
+    }
+
+    setTimeOfDay(greeting);
+
+    // Try to get user name from storage
+    chrome.storage.local.get(['userName'], (result) => {
+      if (result.userName) {
+        setUserName(result.userName);
+      }
+    });
+  }, []);
 
   // Get data from storage
   useEffect(() => {
@@ -70,7 +96,21 @@ const Dashboard = () => {
     };
   }, []);
 
-  // Render active task card
+  // Get motivational quotes
+  const getRandomQuote = () => {
+    const quotes = [
+      "Time is a created thing. To say 'I don't have time' is to say 'I don't want to.'",
+      "The key is not to prioritize what's on your schedule, but to schedule your priorities.",
+      "Focus on being productive instead of busy.",
+      "Your focus determines your reality.",
+      "You will never find time for anything. If you want time, you must make it.",
+      "The more time you spend on focused work, the more you separate yourself from the competition."
+    ];
+
+    return quotes[Math.floor(Math.random() * quotes.length)];
+  };
+
+  // Render active task card with enhanced styling
   const renderActiveTaskCard = () => {
     if (!activeTask) return null;
 
@@ -101,39 +141,69 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <h1>Welcome to LockIn</h1>
-      <p className="quote">Time is a created thing. To say 'I don't have time' is to say 'I don't want to.'</p>
+      <div className="dashboard-header">
+        <div className="welcome-section">
+          <h1>{timeOfDay}{userName ? `, ${userName}` : ''}</h1>
+          <p className="quote">{getRandomQuote()}</p>
+        </div>
+        <div className="date-display">
+          {new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </div>
+      </div>
 
       <div className="dashboard-grid">
         {activeTask ? (
           <div className="current-task">
-            <h2>Current Task</h2>
+            <h2>
+              <span className="icon">📋</span>
+              Current Task
+            </h2>
             {renderActiveTaskCard()}
           </div>
         ) : (
           <div className="quick-start">
-            <h2>Quick Start</h2>
+            <h2>
+              <span className="icon">⏱️</span>
+              Quick Start
+            </h2>
             <PomodoroTimer />
           </div>
         )}
 
         <div className="notification-filtering">
-          <h2>Notification Filtering</h2>
+          <h2>
+            <span className="icon">🔔</span>
+            Notification Filtering
+          </h2>
           <NotificationFilter />
         </div>
 
         <div className="notifications-overview">
-          <h2>Notifications Overview</h2>
+          <h2>
+            <span className="icon">📊</span>
+            Notifications Overview
+          </h2>
           <NotificationsOverview />
         </div>
 
         <div className="productivity-analytics">
-          <h2>Productivity Analytics</h2>
+          <h2>
+            <span className="icon">📈</span>
+            Productivity Analytics
+          </h2>
           <ProductivityAnalytics />
         </div>
 
         <div className="focus-streak">
-          <h2>Focus Streak</h2>
+          <h2>
+            <span className="icon">🔥</span>
+            Focus Streak
+          </h2>
           <FocusStreak data={focusStreak} />
         </div>
       </div>
