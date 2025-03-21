@@ -1,4 +1,6 @@
 // This runs in the background and manages notifications and focus sessions
+import * as analyticsUtils from '../utils/analytics.js';
+import * as storageUtils from '../utils/storage.js';
 
 let blockedNotifications = [];
 let isFocusModeActive = false; // Global state to track focus mode
@@ -147,17 +149,77 @@ function clearNotifications() {
 }
 
 // Start a focus session
+// function startFocusSession(taskId, timerType = 'POMODORO') {
+//   console.log('Starting focus session:', timerType);
+
+//   // Get current timer state
+//   chrome.storage.local.get(['timerState'], (result) => {
+//     let duration = 25 * 60 * 1000; // Default to 25 minutes
+
+//     if (timerType === 'SHORT_BREAK') {
+//       duration = 5 * 60 * 1000;
+//     } else if (timerType === 'LONG_BREAK') {
+//       duration = 15 * 60 * 1000;
+//     }
+
+//     const now = Date.now();
+//     const endTime = now + duration;
+
+//     // Set global focus mode state
+//     isFocusModeActive = true;
+
+//     // Create or update the timer state
+//     const timerState = {
+//       savedType: timerType || 'POMODORO',
+//       savedMinutes: Math.floor(duration / 60000),
+//       savedSeconds: 0,
+//       savedIsActive: true,
+//       endTime: endTime,
+//       pausedAt: null,
+//       taskId: taskId
+//     };
+
+//     // Save to storage
+//     chrome.storage.local.set({
+//       timerState,
+//       activeTimer: taskId
+//     });
+
+//     // Create an alarm for when the session ends
+//     chrome.alarms.clear('pomodoroEnd');
+//     chrome.alarms.create('pomodoroEnd', {
+//       when: endTime
+//     });
+
+//     // Create our own system notification (we can control this one)
+//     chrome.notifications.create('focus-mode-notification', {
+//       type: 'basic',
+//       iconUrl: '/assets/icons/icon128.png',
+//       title: 'Focus Mode Activated',
+//       message: 'Notifications will be filtered for the next ' + (timerState.savedMinutes) + ' minutes.'
+//     });
+
+//     // Update badge to show focus mode is on
+//     chrome.action.setBadgeText({ text: 'ON' });
+//     chrome.action.setBadgeBackgroundColor({ color: '#F87060' });
+//   });
+// }
+
 function startFocusSession(taskId, timerType = 'POMODORO') {
   console.log('Starting focus session:', timerType);
 
   // Get current timer state
-  chrome.storage.local.get(['timerState'], (result) => {
-    let duration = 25 * 60 * 1000; // Default to 25 minutes
+  chrome.storage.local.get(['timerState', 'settings'], (result) => {
+    // Use settings from storage if available
+    const settings = result.settings || {};
 
-    if (timerType === 'SHORT_BREAK') {
-      duration = 5 * 60 * 1000;
+    let duration;
+    if (timerType === 'POMODORO') {
+      duration = (settings.pomodoroMinutes || 25) * 60 * 1000;
+    } else if (timerType === 'SHORT_BREAK') {
+      duration = (settings.shortBreakMinutes || 5) * 60 * 1000;
     } else if (timerType === 'LONG_BREAK') {
-      duration = 15 * 60 * 1000;
+      duration = (settings.longBreakMinutes || 15) * 60 * 1000;
     }
 
     const now = Date.now();
@@ -182,6 +244,13 @@ function startFocusSession(taskId, timerType = 'POMODORO') {
       timerState,
       activeTimer: taskId
     });
+
+    // Track session start in analytics
+    if (timerType === 'POMODORO') {
+      analyticsUtils.trackSessionStart(taskId, timerType).catch(err => {
+        console.error('Error tracking session start:', err);
+      });
+    }
 
     // Create an alarm for when the session ends
     chrome.alarms.clear('pomodoroEnd');
@@ -314,6 +383,28 @@ function endFocusSession() {
 }
 
 // Handle timer completion
+// function handleTimerCompleted(timerType, taskId) {
+//   console.log('Timer completed:', timerType);
+
+//   // Update global state if this was a pomodoro
+//   if (timerType === 'POMODORO') {
+//     isFocusModeActive = false;
+
+//     // Just set the timer to inactive
+//     endFocusSession();
+//   }
+
+//   // Create our own notification (we can control this one)
+//   chrome.notifications.create('timer-completed-notification', {
+//     type: 'basic',
+//     iconUrl: '/assets/icons/icon128.png',
+//     title: `${timerType} Completed!`,
+//     message: timerType === 'POMODORO' ? 'Time for a break!' : 'Ready to focus again?'
+//   });
+
+//   // Update badge
+//   chrome.action.setBadgeText({ text: '' });
+// }
 function handleTimerCompleted(timerType, taskId) {
   console.log('Timer completed:', timerType);
 
@@ -321,9 +412,50 @@ function handleTimerCompleted(timerType, taskId) {
   if (timerType === 'POMODORO') {
     isFocusModeActive = false;
 
+    // Track the completed session in analytics
+    analyticsUtils.trackSessionComplete().catch(err => {
+      console.error('Error tracking session completion:', err);
+    });
+
     // Just set the timer to inactive
     endFocusSession();
   }
+
+  // Play notification sound
+  // playTimerCompletionSound(timerType).catch(err => {
+  //   console.error('Error playing notification sound:', err);
+  // });
+  // Function to play notification sounds
+async function playTimerCompletionSound(timerType) {
+  try {
+    // Get settings
+    chrome.storage.local.get(['settings'], (result) => {
+      const settings = result.settings || {};
+
+      // Check if sounds are enabled
+      if (settings.enableSounds === false) {
+        return;
+      }
+
+      // Get the sound to play
+      const sound = settings.notificationSound || 'bell';
+      const volume = settings.notificationVolume || 70;
+
+      // Create audio element
+      const audio = new Audio(`/assets/sounds/${sound}.mp3`);
+      audio.volume = volume / 100;
+
+      // Play sound
+      audio.play().then(() => {
+        console.log(`Played ${sound} sound notification`);
+      }).catch((error) => {
+        console.error('Error playing notification sound:', error);
+      });
+    });
+  } catch (error) {
+    console.error('Error playing notification sound:', error);
+  }
+}
 
   // Create our own notification (we can control this one)
   chrome.notifications.create('timer-completed-notification', {
@@ -350,6 +482,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         handleTimerCompleted(timerType, taskId);
       }
     });
+
+    // Play notification sound
+    playTimerCompletionSound(timerType);
   }
 });
 
@@ -541,4 +676,31 @@ function allowNotification(details) {
       updateNotificationStats(details.source);
     }
   });
+}
+
+// Function to play notification sounds
+async function playTimerCompletionSound(timerType) {
+  try {
+    // Get settings
+    const settings = await storageUtils.getValue('settings', {});
+
+    // Check if sounds are enabled
+    if (settings.enableSounds === false) {
+      return;
+    }
+
+    // Get the sound to play
+    const sound = settings.notificationSound || 'bell';
+    const volume = settings.notificationVolume || 70;
+
+    // Create audio element
+    const audio = new Audio(`/assets/sounds/${sound}.mp3`);
+    audio.volume = volume / 100;
+
+    // Play sound
+    await audio.play();
+    console.log(`Played ${sound} sound notification`);
+  } catch (error) {
+    console.error('Error playing notification sound:', error);
+  }
 }

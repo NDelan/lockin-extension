@@ -438,3 +438,281 @@
   .slider.round:before {
     border-radius: 50%;
   }
+
+/* Settings Page Styles */
+.settings-container {
+  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.settings-section {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.settings-section h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+}
+
+.setting-item label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.setting-item input[type="number"],
+.setting-item select {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.setting-item input[type="range"] {
+  width: 150px;
+}
+
+.setting-item.switch {
+  display: flex;
+  align-items: center;
+}
+
+.setting-item.switch label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+}
+
+.setting-item.switch input {
+  height: 0;
+  width: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+.setting-item.switch .slider {
+  position: relative;
+  width: 50px;
+  height: 24px;
+  background: #ccc;
+  border-radius: 24px;
+  transition: 0.3s;
+  margin-left: 10px;
+}
+
+.setting-item.switch .slider:after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 18px;
+  transition: 0.3s;
+}
+
+.setting-item.switch input:checked + .slider {
+  background: #F87060;
+}
+
+.setting-item.switch input:checked + .slider:after {
+  left: calc(100% - 3px);
+  transform: translateX(-100%);
+}
+
+.test-sound-btn {
+  background-color: #F87060;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.test-sound-btn:hover {
+  background-color: #e65c4a;
+}
+
+.test-sound-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.reset-button {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reset-button:hover {
+  background-color: #e0e0e0;
+}
+
+/* Analytics Styles */
+.analytics-container {
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.analytics-metric {
+  text-align: center;
+  padding: 0.8rem;
+  background-color: #f8f8f8;
+  border-radius: 6px;
+}
+
+.analytics-metric h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.metric-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.daily-chart {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 150px;
+  margin-top: 1rem;
+}
+
+.chart-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.chart-label {
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 0.5rem;
+}
+
+.chart-bar-wrapper {
+  height: 120px;
+  width: 30px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.chart-bar {
+  width: 20px;
+  background-color: #F87060;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.3s ease;
+}
+
+.chart-value {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.3rem;
+  height: 1rem;
+}
+
+/* Focus Streak Styles */
+.focus-streak-container {
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.streak-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.streak-card {
+  text-align: center;
+  padding: 0.8rem;
+  background-color: #f8f8f8;
+  border-radius: 6px;
+}
+
+.streak-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.streak-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.weekly-goal h3 {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 0.8rem;
+}
+
+.progress-container {
+  height: 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #F87060;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #666;
+}

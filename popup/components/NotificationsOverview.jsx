@@ -26,7 +26,7 @@ const NotificationsOverview = () => {
       }
     });
   }, []);
-  
+
   // Listen for changes to notification stats
   useEffect(() => {
     const handleStorageChange = (changes, area) => {
@@ -43,6 +43,7 @@ const NotificationsOverview = () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
   }, []);
+  
 
   const navigateToNotifications = () => {
     // Find the Notifications tab element and click it
