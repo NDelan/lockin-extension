@@ -1,20 +1,36 @@
 import React, { useState, useEffect } from 'react';
 
 const PomodoroTimer = ({ activeTaskId }) => {
-  const [minutes, setMinutes] = useState(25);
+  // Initialize with null to indicate we're waiting for settings
+  const [minutes, setMinutes] = useState(null);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [timerType, setTimerType] = useState('POMODORO');
   const [initialized, setInitialized] = useState(false);
   const [progress, setProgress] = useState(100); // For progress indicator
 
-  // Get the initial duration based on timer type
-  const getInitialDuration = (type) => {
+  // Load settings on component mount to set initial values
+  useEffect(() => {
+    chrome.storage.local.get(['settings'], (result) => {
+      const settings = result.settings || {};
+      // Set initial timer value based on settings
+      const initialDuration = timerType === 'POMODORO'
+        ? (settings.pomodoroMinutes || 25)
+        : timerType === 'SHORT_BREAK'
+          ? (settings.shortBreakMinutes || 5)
+          : (settings.longBreakMinutes || 15);
+
+      setMinutes(initialDuration);
+    });
+  }, []);
+
+  // Get the initial duration based on timer type and settings
+  const getInitialDuration = (type, settings = {}) => {
     switch(type) {
-      case 'SHORT_BREAK': return 5;
-      case 'LONG_BREAK': return 15;
-      case 'POMODORO': return 25;
-      default: return 25;
+      case 'SHORT_BREAK': return settings.shortBreakMinutes || 5;
+      case 'LONG_BREAK': return settings.longBreakMinutes || 15;
+      case 'POMODORO': return settings.pomodoroMinutes || 25;
+      default: return settings.pomodoroMinutes || 25;
     }
   };
 
@@ -23,99 +39,103 @@ const PomodoroTimer = ({ activeTaskId }) => {
     return mins * 60 + secs;
   };
 
-  // Calculate the initial total seconds based on timer type
-  const getInitialTotalSeconds = (type) => {
-    return getInitialDuration(type) * 60;
-  };
-
   // Load timer state from storage
   useEffect(() => {
     const loadTimerState = () => {
       chrome.storage.local.get(['timerState', 'activeTimer', 'settings'], (result) => {
         // Use settings if available
         const settings = result.settings || {};
-        let initialPomodoro = settings.pomodoroMinutes || 25;
-        let initialShortBreak = settings.shortBreakMinutes || 5;
-        let initialLongBreak = settings.longBreakMinutes || 15;
 
-        if (result.timerState) {
-          // This instance of the timer should respond if:
-          // 1. This is a dashboard timer with no associated task
-          // 2. This is a task timer matching the active task
-          const relevantToThisInstance =
-            (!activeTaskId && !result.timerState.taskId) ||
-            (activeTaskId && result.timerState.taskId === activeTaskId);
+        // Get the duration for each timer type from settings
+        const pomoDuration = settings.pomodoroMinutes || 25;
+        const shortBreakDuration = settings.shortBreakMinutes || 5;
+        const longBreakDuration = settings.longBreakMinutes || 15;
 
-          if (!relevantToThisInstance) {
-            // If not relevant to this timer, just set default values
-            setMinutes(initialPomodoro);
-            setSeconds(0);
-            setIsActive(false);
-            setTimerType('POMODORO');
-            setProgress(100); // Reset progress
-            setInitialized(true);
-            return;
-          }
+        // If no timer state exists yet, initialize with settings values for current type
+        if (!result.timerState) {
+          // Set minutes based on current timer type
+          const defaultDuration = timerType === 'POMODORO'
+            ? pomoDuration
+            : timerType === 'SHORT_BREAK'
+              ? shortBreakDuration
+              : longBreakDuration;
 
-          // Make sure to set timer type first before calculating minutes
-          const savedType = result.timerState.savedType || 'POMODORO';
-          setTimerType(savedType);
+          setMinutes(defaultDuration);
+          setSeconds(0);
+          setIsActive(false);
+          setProgress(100);
+          setInitialized(true);
+          return;
+        }
 
-          // Get the appropriate initial duration for this timer type
-          let initialDuration;
-          switch(savedType) {
-            case 'SHORT_BREAK': initialDuration = initialShortBreak; break;
-            case 'LONG_BREAK': initialDuration = initialLongBreak; break;
-            default: initialDuration = initialPomodoro;
-          }
+        // This instance of the timer should respond if:
+        // 1. This is a dashboard timer with no associated task
+        // 2. This is a task timer matching the active task
+        const relevantToThisInstance =
+          (!activeTaskId && !result.timerState.taskId) ||
+          (activeTaskId && result.timerState.taskId === activeTaskId);
 
-          // Calculate initial total seconds
-          const initialTotalSeconds = initialDuration * 60;
+        if (!relevantToThisInstance) {
+          // If not relevant to this timer, set values from settings based on CURRENT timer type
+          const defaultDuration = timerType === 'POMODORO'
+            ? pomoDuration
+            : timerType === 'SHORT_BREAK'
+              ? shortBreakDuration
+              : longBreakDuration;
 
-          if (result.timerState.savedIsActive) {
-            // If timer is active, calculate the current time based on endTime
-            if (result.timerState.endTime) {
-              const now = Date.now();
-              const remainingMs = Math.max(0, result.timerState.endTime - now);
+          setMinutes(defaultDuration);
+          setSeconds(0);
+          setIsActive(false);
+          setProgress(100);
+          setInitialized(true);
+          return;
+        }
 
-              if (remainingMs > 0) {
-                const remainingMinutes = Math.floor(remainingMs / 60000);
-                const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
-                const currentTotalSeconds = getTotalSeconds(remainingMinutes, remainingSeconds);
+        // Get timer type from state or default to current
+        const savedType = result.timerState.savedType || timerType;
+        setTimerType(savedType);
 
-                // Calculate progress percentage
-                const progressPercentage = (currentTotalSeconds / initialTotalSeconds) * 100;
+        // Get the appropriate initial duration for this timer type
+        let initialDuration;
+        switch(savedType) {
+          case 'SHORT_BREAK': initialDuration = shortBreakDuration; break;
+          case 'LONG_BREAK': initialDuration = longBreakDuration; break;
+          default: initialDuration = pomoDuration;
+        }
 
-                setMinutes(remainingMinutes);
-                setSeconds(remainingSeconds);
-                setIsActive(true);
-                setProgress(progressPercentage);
-              } else {
-                // Timer should have completed
-                setMinutes(initialDuration);
-                setSeconds(0);
-                setIsActive(false);
-                setProgress(100); // Reset progress
+        // Calculate initial total seconds
+        const initialTotalSeconds = initialDuration * 60;
 
-                // Since timer completed, update storage
-                saveTimerState(false, initialDuration, 0, savedType);
-              }
-            } else {
-              // No endTime but active - just use saved values
-              const savedMinutes = result.timerState.savedMinutes || initialDuration;
-              const savedSeconds = result.timerState.savedSeconds || 0;
-              const currentTotalSeconds = getTotalSeconds(savedMinutes, savedSeconds);
+        if (result.timerState.savedIsActive) {
+          // If timer is active, calculate the current time based on endTime
+          if (result.timerState.endTime) {
+            const now = Date.now();
+            const remainingMs = Math.max(0, result.timerState.endTime - now);
+
+            if (remainingMs > 0) {
+              const remainingMinutes = Math.floor(remainingMs / 60000);
+              const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
+              const currentTotalSeconds = getTotalSeconds(remainingMinutes, remainingSeconds);
 
               // Calculate progress percentage
               const progressPercentage = (currentTotalSeconds / initialTotalSeconds) * 100;
 
-              setMinutes(savedMinutes);
-              setSeconds(savedSeconds);
+              setMinutes(remainingMinutes);
+              setSeconds(remainingSeconds);
               setIsActive(true);
               setProgress(progressPercentage);
+            } else {
+              // Timer should have completed
+              setMinutes(initialDuration);
+              setSeconds(0);
+              setIsActive(false);
+              setProgress(100); // Reset progress
+
+              // Since timer completed, update storage
+              saveTimerState(false, initialDuration, 0, savedType);
             }
           } else {
-            // Timer is paused, use exact saved values
+            // No endTime but active - just use saved values
             const savedMinutes = result.timerState.savedMinutes || initialDuration;
             const savedSeconds = result.timerState.savedSeconds || 0;
             const currentTotalSeconds = getTotalSeconds(savedMinutes, savedSeconds);
@@ -125,19 +145,33 @@ const PomodoroTimer = ({ activeTaskId }) => {
 
             setMinutes(savedMinutes);
             setSeconds(savedSeconds);
-            setIsActive(false);
+            setIsActive(true);
             setProgress(progressPercentage);
           }
+        } else {
+          // Timer is paused, use exact saved values
+          const savedMinutes = result.timerState.savedMinutes || initialDuration;
+          const savedSeconds = result.timerState.savedSeconds || 0;
+          const currentTotalSeconds = getTotalSeconds(savedMinutes, savedSeconds);
+
+          // Calculate progress percentage
+          const progressPercentage = (currentTotalSeconds / initialTotalSeconds) * 100;
+
+          setMinutes(savedMinutes);
+          setSeconds(savedSeconds);
+          setIsActive(false);
+          setProgress(progressPercentage);
         }
+
         setInitialized(true);
       });
     };
 
     loadTimerState();
 
-    // Listen for storage changes
+    // Listen for storage changes - now including settings changes
     const handleStorageChange = (changes, area) => {
-      if (area === 'local' && changes.timerState) {
+      if (area === 'local' && (changes.timerState || changes.settings)) {
         loadTimerState();
       }
     };
@@ -147,11 +181,11 @@ const PomodoroTimer = ({ activeTaskId }) => {
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
-  }, [activeTaskId]);
+  }, [activeTaskId, timerType]); // Added timerType to dependencies
 
   // Timer countdown effect
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || minutes === null) return;
 
     let interval = null;
 
@@ -197,19 +231,30 @@ const PomodoroTimer = ({ activeTaskId }) => {
               clearInterval(interval);
               setIsActive(false);
 
-              const newDuration = getInitialDuration(timerType);
-              setMinutes(newDuration);
-              setSeconds(0);
-              setProgress(100); // Reset progress
+              // Use settings-based duration
+              chrome.storage.local.get(['settings'], (settingsResult) => {
+                const settings = settingsResult.settings || {};
+                let newDuration;
 
-              // Update storage
-              saveTimerState(false, newDuration, 0, timerType);
+                switch(timerType) {
+                  case 'SHORT_BREAK': newDuration = settings.shortBreakMinutes || 5; break;
+                  case 'LONG_BREAK': newDuration = settings.longBreakMinutes || 15; break;
+                  default: newDuration = settings.pomodoroMinutes || 25;
+                }
 
-              // Notify timer completion
-              chrome.runtime.sendMessage({
-                action: 'TIMER_COMPLETED',
-                timerType,
-                taskId: activeTaskId
+                setMinutes(newDuration);
+                setSeconds(0);
+                setProgress(100); // Reset progress
+
+                // Update storage
+                saveTimerState(false, newDuration, 0, timerType);
+
+                // Notify timer completion
+                chrome.runtime.sendMessage({
+                  action: 'TIMER_COMPLETED',
+                  timerType,
+                  taskId: activeTaskId
+                });
               });
             }
           }
@@ -220,7 +265,35 @@ const PomodoroTimer = ({ activeTaskId }) => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, initialized, timerType]);
+  }, [isActive, initialized, timerType, minutes]);
+
+  // Handle timer type change
+  const handleTimerTypeChange = (e) => {
+    const newType = e.target.value;
+
+    // Get current settings for the new duration
+    chrome.storage.local.get(['settings'], (result) => {
+      const settings = result.settings || {};
+
+      // Get the duration based on settings and timer type
+      let newDuration;
+      switch(newType) {
+        case 'SHORT_BREAK': newDuration = settings.shortBreakMinutes || 5; break;
+        case 'LONG_BREAK': newDuration = settings.longBreakMinutes || 15; break;
+        default: newDuration = settings.pomodoroMinutes || 25;
+      }
+
+      // Update local state
+      setTimerType(newType);
+      setMinutes(newDuration);
+      setSeconds(0);
+      setIsActive(false);
+      setProgress(100); // Reset progress
+
+      // Update storage with the new timer type
+      saveTimerState(false, newDuration, 0, newType);
+    });
+  };
 
   // Save timer state to storage
   const saveTimerState = (isRunning, mins, secs, type = timerType) => {
@@ -248,10 +321,15 @@ const PomodoroTimer = ({ activeTaskId }) => {
   };
 
   const formatTime = () => {
+    // Show loading state if minutes is not set yet
+    if (minutes === null) return "Loading...";
+
     return `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
   };
 
   const toggleTimer = () => {
+    if (minutes === null) return; // Don't allow start if not initialized
+
     const newActiveState = !isActive;
     setIsActive(newActiveState);
 
@@ -264,24 +342,6 @@ const PomodoroTimer = ({ activeTaskId }) => {
       timerType,
       taskId: activeTaskId
     });
-  };
-
-  const handleTimerTypeChange = (e) => {
-    const newType = e.target.value;
-    const newDuration = getInitialDuration(newType);
-
-    // Update local state
-    setTimerType(newType);
-    setMinutes(newDuration);
-    setSeconds(0);
-    setIsActive(false);
-    setProgress(100); // Reset progress
-
-    // Update storage with the new timer type
-    saveTimerState(false, newDuration, 0, newType);
-
-    // Log for debugging
-    console.log(`Timer type changed to: ${newType}, duration: ${newDuration} minutes`);
   };
 
   // Get background color based on timer type
