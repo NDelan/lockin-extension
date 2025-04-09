@@ -4,6 +4,7 @@ import NotificationFilter from './NotificationFilter';
 import NotificationsOverview from './NotificationsOverview';
 import ProductivityAnalytics from './ProductivityAnalytics';
 import FocusStreak from './FocusStreak';
+import PopoutButton from './PopoutButton';
 
 const Dashboard = () => {
   const [focusStreak, setFocusStreak] = useState({
@@ -16,6 +17,19 @@ const Dashboard = () => {
   const [timerSettings, setTimerSettings] = useState(null);
   const [userName, setUserName] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('');
+  const [isPopout, setIsPopout] = useState(false);
+
+  // Check if in popout mode
+  useEffect(() => {
+    // Check URL for popout parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const popout = urlParams.get('popout');
+    if (popout === 'true') {
+      setIsPopout(true);
+      // Add popout-mode class to body
+      document.body.classList.add('popout-mode');
+    }
+  }, []);
 
   // Determine time of day for greeting
   useEffect(() => {
@@ -141,6 +155,9 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Popout Button - only show if not already in popout mode */}
+      {!isPopout && <PopoutButton />}
+
       <div className="dashboard-header">
         <div className="welcome-section">
           <h1>{timeOfDay}{userName ? `, ${userName}` : ''}</h1>
@@ -157,23 +174,14 @@ const Dashboard = () => {
       </div>
 
       <div className="dashboard-grid">
-        {activeTask ? (
-          <div className="current-task">
-            <h2>
-              <span className="icon">📋</span>
-              Current Task
-            </h2>
-            {renderActiveTaskCard()}
-          </div>
-        ) : (
-          <div className="quick-start">
-            <h2>
-              <span className="icon">⏱️</span>
-              Quick Start
-            </h2>
-            <PomodoroTimer />
-          </div>
-        )}
+        {/* Row 1: Timer and Notification Filtering */}
+        <div className={activeTask ? "current-task" : "quick-start"}>
+          <h2>
+            <span className="icon">{activeTask ? '📋' : '⏱️'}</span>
+            {activeTask ? 'Current Task' : 'Quick Start'}
+          </h2>
+          {renderActiveTaskCard() || <PomodoroTimer />}
+        </div>
 
         <div className="notification-filtering">
           <h2>
@@ -183,6 +191,7 @@ const Dashboard = () => {
           <NotificationFilter />
         </div>
 
+        {/* Row 2: Notifications Overview */}
         <div className="notifications-overview">
           <h2>
             <span className="icon">📊</span>
@@ -191,6 +200,7 @@ const Dashboard = () => {
           <NotificationsOverview />
         </div>
 
+        {/* Row 3: Productivity Analytics (full width) */}
         <div className="productivity-analytics">
           <h2>
             <span className="icon">📈</span>
@@ -199,6 +209,7 @@ const Dashboard = () => {
           <ProductivityAnalytics />
         </div>
 
+        {/* Row 4: Focus Streak (full width) */}
         <div className="focus-streak">
           <h2>
             <span className="icon">🔥</span>

@@ -1,0 +1,208 @@
+/* Admin Navigation Styles */
+
+/* Admin nav item with distinctive styling */
+.admin-active {
+    background-color: rgba(74, 108, 247, 0.08);
+    border-left: 3px solid #4a6cf7;
+  }
+
+  .admin-active:hover {
+    background-color: rgba(74, 108, 247, 0.15);
+  }
+
+  .admin-active.active {
+    background-color: rgba(74, 108, 247, 0.2);
+  }
+
+  /* Admin mode toggle switch */
+  .admin-mode-toggle {
+    position: absolute;
+    top: 12px;
+    right: 10px;
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #f0f2f5;
+    border-radius: 20px;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    padding: 0 3px;
+  }
+
+  .toggle-icon {
+    font-size: 12px;
+    transition: transform 0.3s;
+    display: inline-block;
+  }
+
+  input:checked + .toggle-slider {
+    background-color: rgba(74, 108, 247, 0.2);
+  }
+
+  input:checked + .toggle-slider .toggle-icon {
+    transform: translateX(16px);
+  }
+
+  /* Admin mode indicator */
+  .admin-mode-indicator {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #4a6cf7;
+    background-color: rgba(74, 108, 247, 0.1);
+    padding: 3px 0;
+    font-weight: 600;
+  }
+
+  /* Additional styling for the admin dashboard */
+  .admin-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-controls {
+    display: flex;
+    gap: 0.8rem;
+  }
+
+  .admin-button {
+    background-color: #f0f2f5;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .admin-button:hover {
+    background-color: #e0e2e5;
+  }
+
+  .admin-button.primary {
+    background-color: #4a6cf7;
+    color: white;
+  }
+
+  .admin-button.primary:hover {
+    background-color: #3a5ce7;
+  }
+
+  .admin-button.warning {
+    background-color: #ff8042;
+    color: white;
+  }
+
+  .admin-button.warning:hover {
+    background-color: #e07032;
+  }
+
+  /* Badge to indicate admin status */
+  .admin-badge {
+    display: inline-block;
+    background-color: #4a6cf7;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+
+  /* Admin access section in settings */
+  .admin-access-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+  }
+
+  .admin-access-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #2a3f5f;
+  }
+
+  .admin-toggle {
+    display: flex;
+    align-items: center;
+    margin: 1rem 0;
+  }
+
+  .admin-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+    margin-right: 0.8rem;
+  }
+
+  .admin-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .admin-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+  }
+
+  .admin-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .admin-toggle-slider {
+    background-color: #4a6cf7;
+  }
+
+  input:checked + .admin-toggle-slider:before {
+    transform: translateX(24px);
+  }
+
+  .admin-toggle-label {
+    font-weight: 500;
+  }

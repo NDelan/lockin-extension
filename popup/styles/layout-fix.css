@@ -1,0 +1,124 @@
+/* Layout fixes for admin dashboard */
+
+/* Extension container layout */
+.extension-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Sidebar sizing and positioning */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    height: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 10;
+    overflow-y: auto;
+  }
+
+  /* Main content area - adjust to account for fixed sidebar */
+  main {
+    flex: 1;
+    margin-left: 220px; /* Match sidebar width */
+    width: calc(100% - 220px);
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  /* Admin dashboard container */
+  .admin-dashboard {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 20px; /* Add some padding to avoid content touching the edge */
+  }
+
+  /* Make sections fit within the container width */
+  .admin-section {
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  /* Ensure grid layouts respect container width */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    width: 100%;
+  }
+
+  /* Adjust charts to fit within container */
+  .chart-placeholder {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Test group comparison */
+  .test-group-comparison {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .test-group {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  /* Ensure tables don't overflow */
+  .ab-test-table {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+
+  /* Feedback and next steps sections */
+  .user-feedback,
+  .next-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    width: 100%;
+  }
+
+  /* Admin mode toggle positioning */
+  .admin-mode-toggle {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    z-index: 20;
+  }
+
+  /* Admin mode indicator positioning */
+  .admin-mode-indicator {
+    position: fixed;
+    bottom: 10px;
+    left: 0;
+    width: 220px; /* Match sidebar width */
+    z-index: 20;
+  }
+
+  /* Media query for smaller screens */
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 180px;
+      min-width: 180px;
+    }
+
+    main {
+      margin-left: 180px;
+      width: calc(100% - 180px);
+    }
+
+    .admin-mode-indicator {
+      width: 180px;
+    }
+  }

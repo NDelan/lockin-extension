@@ -1,0 +1,5 @@
+lockin-extension@1.0.0 /Users/delanyonutakor/Desktop/2025/Spring/CS422/Projects/lockin-extension
+├── react-dom@19.0.0
+├── react@19.0.0
+└── recharts@2.15.1
+
